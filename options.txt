@@ -1,0 +1,4 @@
+#Window width - pixels
+800
+#Window height - pixels
+600
