@@ -1,5 +1,3 @@
-import os
-import sys
 import pygame as pg
 from pygame.locals import *
 
@@ -20,24 +18,26 @@ class Ship(object):
         self.hasFired = False
 
     def fire(self):
-        self.hasFired = True       
+        self.hasFired = True # Shows that player has requested to fire  
 
-    def update(self, screen, newX, newY):
+    def update(self, newX, newY):
         self.xCoord = newX
         self.yCoord = newY
         screen.blit(self.image, (self.xCoord, self.yCoord))
         if self.hasFired or self.bullets:
             if len(self.bullets) < 2 and self.hasFired:
+                # Instatiates another bullet - maximum of two on screen at once
                 bulletY = self.yCoord
                 bulletX = self.xCoord + (self.width / 2)
                 self.bullets.append(Bullet(self.bulletWidth,self.bulletHeight,
                                            bulletX,bulletY,self.bulletHeight * -1))
             for i in self.bullets:
                 collided = i.update()
-                if collided:
+                if collided: # Stops updating bullets that have collided
                     del(self.bullets[self.bullets.index(i)])
                 else:
                     pass
+
             self.hasFired = False
 
 class Bullet(object):
@@ -50,13 +50,14 @@ class Bullet(object):
     
     def update(self):
         self.yCoord += self.speed
-        if 0 <= self.yCoord <= SCREEN_HEIGHT:
+        if 0 <= self.yCoord <= SCREEN_HEIGHT: # If bullet is on-screen
             screen.blit(self.image, (self.xCoord, self.yCoord))
-            return False
+            return False # Returns not collided
         else:
-            return True
+            return True # Else returns collided
 
 def pauseMenu(playerX, playerY):
+    # Secondary gameloop for the pause menu - stops main one
     paused = True
     while paused:
         for event in pg.event.get():
@@ -71,7 +72,7 @@ def pauseMenu(playerX, playerY):
         showPause()
         pg.display.update()
         fps = str(int(clock.get_fps()))
-        pg.display.set_caption('Schnapsen but not | FPS: ' + fps)
+        pg.display.set_caption('Galaga | FPS: ' + fps)
         pg.display.update()
         clock.tick(60)
     
@@ -84,7 +85,6 @@ def pauseMenu(playerX, playerY):
 
 def mainGameLoop(x,y):
     running = True
-    hasFired = False
     while running: # Game loop - each loop is a frame
         for event in pg.event.get():
             if event.type == KEYDOWN:
@@ -99,9 +99,6 @@ def mainGameLoop(x,y):
 
         key = pg.key.get_pressed()
             
-        if not key[K_RIGHT] and not key[K_d] and not key[K_LEFT] and not key[K_a]:
-            shipImage = originalShipImage
-            
         if key[K_RIGHT] or key[K_d]:
             x += xChange
             if x > SCREEN_WIDTH - SHIP_WIDTH:
@@ -113,10 +110,10 @@ def mainGameLoop(x,y):
                 x = 0
 
         screen.fill(BG_COLOUR)
-        playerShip.update(screen,x,y)
+        playerShip.update(x,y)
                 
         fps = str(int(clock.get_fps()))
-        pg.display.set_caption('Schnapsen but not | FPS: ' + fps)
+        pg.display.set_caption('Galaga | FPS: ' + fps)
         pg.display.update()
         clock.tick(60)
 
