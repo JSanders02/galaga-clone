@@ -2,7 +2,7 @@ import os
 import random
 import pygame as pg
 from pygame.locals import *
-from math import sin, cos, radians, log10
+from math import sin, cos, radians, log10, ceil
 
 class Ship(object):
     def __init__(self, image, x, y):
@@ -169,6 +169,7 @@ def changeScreenSize(bg):
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     changing = False
+                    pg.key.set_repeat(0, 0)
                     return False
                 
                 elif event.key == K_RETURN:
@@ -176,9 +177,11 @@ def changeScreenSize(bg):
                         if width != SCREEN_WIDTH or height != SCREEN_HEIGHT:
                             changing = False
                             writeToOptions(width, height)
+                            pg.key.set_repeat(0, 0)
                             return True
                         else:
                             changing = False
+                            pg.key.set_repeat(0, 0)
                             return False
                     else:
                         pass
@@ -198,23 +201,23 @@ def changeScreenSize(bg):
                 elif event.key == K_RIGHT or event.key == K_d:
                     if selected == 0:
                         if 100 <= width < 5000:
-                            width += 1
+                            width += 2
                             widthText = generateText(str(width))
 
                     elif selected == 1:
                         if 100 <= height < 5000:
-                            height += 1
+                            height += 2
                             heightText = generateText(str(height))
                 
                 elif event.key == K_LEFT or K_a:
                     if selected == 0:
                         if 100 < width <= 5000:
-                            width -= 1
+                            width -= 2
                             widthText = generateText(str(width))
                     
                     elif selected == 1:
                         if 100 < height <= 5000:
-                            height -= 1
+                            height -= 2
                             heightText = generateText(str(height))
 
             if event.type == QUIT:
@@ -407,13 +410,9 @@ while True:
     y = int((SCREEN_HEIGHT * 0.9))
 
     # Change in x coord when moving horizontal
-    xChange = int(SCREEN_WIDTH * 0.0075)
-    if xChange == 0:
-        xChange = 1
+    xChange = ceil(SCREEN_WIDTH * 0.0075)
     # Change in y coord when moving vertical
-    yChange = int(SCREEN_HEIGHT * 0.0075)
-    if yChange == 0:
-        yChange = 1
+    yChange = ceil(SCREEN_HEIGHT * 0.0075)
 
     playerShip = Ship(shipImage, x, y)
 
