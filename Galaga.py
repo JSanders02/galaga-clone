@@ -17,7 +17,7 @@ class Ship(object):
         else:
             pass
         self.bulletWidth = int(self.bulletHeight / 2)
-        self.bullets = []
+        self.bullets = [] # List to store bullet objects - only two at once
         self.hasFired = False
 
     def fire(self):
@@ -34,7 +34,7 @@ class Ship(object):
                 bulletX = self.rect.centerx
                 self.bullets.append(Bullet(self.bulletWidth,self.bulletHeight,
                                            bulletX,bulletY,self.bulletHeight * -2))
-            for i in self.bullets:
+            for i in self.bullets: # Updates each bullet object separately
                 collided = i.update()
                 if collided: # Stops updating bullets that have collided
                     del(self.bullets[self.bullets.index(i)])
@@ -77,9 +77,11 @@ class Enemy(object):
         screen.blit(self.image, self.rect)
         
     def update(self):
+        global playerScore
         for i in playerShip.bullets:
             if self.rect.colliderect(i.rect):
                 i.rect.y = -1
+                playerScore += 10
                 return True
 
         if self.movingToFormation:
@@ -130,10 +132,12 @@ def moveInDir(direction, magnitude):
     return [int(x),int(y)]
 
 def writeToOptions(width, height):
+    #Writing new screen size to options.txt
     with open('options.txt') as f:
         overwrite = f.readlines()
 
     overwrite[1], overwrite[3] = str(width) + '\n', str(height)
+    #Skips index 0 and 2 as they are comments explaining the options
 
     with open('options.txt', 'w') as f:
         for i in overwrite:
@@ -200,7 +204,7 @@ def changeScreenSize(bg):
 
                 elif event.key == K_RIGHT or event.key == K_d:
                     if selected == 0:
-                        if 100 <= width < 5000:
+                        if 100 <= width < 5000: # Between min and max values
                             width += 2
                             widthText = generateText(str(width))
 
@@ -249,15 +253,15 @@ def pauseMenu(playerX, playerY):
 
     while paused:
         for event in pg.event.get():
-            if event.type == KEYDOWN:
+            if event.type == KEYDOWN: # If key pressed
                 if event.key == K_ESCAPE:
                     paused = False
                     return False
-                elif event.key == K_RETURN:
+                elif event.key == K_RETURN: # K_RETURN = enter
                     if selected == optionSelectImage:
                         if changeScreenSize(bgImage):
                             paused = False
-                            return True
+                            return True # Will reset game with new screen size
                         else:
                             pass
                     elif selected == resumeSelectImage:
@@ -284,6 +288,18 @@ def pauseMenu(playerX, playerY):
     quit()
 
 def mainGameLoop(x,y):
+    global playerScore
+    def showScore(playerScore):
+        try:
+            numDigits = int(log10(playerScore)) + 1
+        except ValueError:
+            numDigits = 1
+        mult = numDigits * 0.05
+        scoreText = gameFont.render(str(playerScore), False, (255, 255, 255))
+        scoreText = pg.transform.scale(scoreText, (int(SCREEN_HEIGHT * mult),
+                                                   int(SCREEN_HEIGHT * 0.1)))
+        screen.blit(scoreText, (0, 10))
+        
     running = True
     enemy = Enemy('bug1', 2)
 
@@ -302,8 +318,9 @@ def mainGameLoop(x,y):
                 running = False
 
         key = pg.key.get_pressed()
+        # Gets a list of keys that have been pressed
             
-        if key[K_RIGHT] or key[K_d]:
+        if key[K_RIGHT] or key[K_d]: # Will be true at key index if pressed
             x += xChange
             if x > SCREEN_WIDTH - SHIP_WIDTH:
                 x = int(SCREEN_WIDTH - SHIP_WIDTH)
@@ -313,17 +330,18 @@ def mainGameLoop(x,y):
             if x < 0:
                 x = 0
 
-        screen.fill(BG_COLOUR)
-        playerShip.update(x,y)
+        screen.fill(BG_COLOUR) # 'Clears' the screen - allows for animation
+        playerShip.update(x,y) # Update player's location
 
-        try:
+        try: # Attempts to update enemy - if none exists, will create another
             if enemy.update():
                 del enemy
         except:
             enemy = Enemy('bug1', random.choice([1,2]))
-                
+
+        showScore(playerScore)
         fps = str(int(clock.get_fps()))
-        pg.display.set_caption('Galaga | FPS: ' + fps)
+        pg.display.set_caption('Galaga | FPS: ' + fps) # Displays FPS of game
         pg.display.update()
         clock.tick(60)
 
@@ -332,6 +350,7 @@ def mainGameLoop(x,y):
         quit()
         
 while True:
+    global playerScore
     pg.init() # Initialises pygame module
 
     ## Defining constants
@@ -371,38 +390,39 @@ while True:
     ## End of essentials
 
     ## Setting up sprites for the game
-    originalShipImage = pg.image.load('images/ship.png')
+    originalShipImage = pg.image.load('images/ship.png').convert_alpha()
+    pg.display.set_icon(originalShipImage)
     # Resizing image
     shipImage = pg.transform.rotozoom(originalShipImage, 0, SHIP_SIZE_MULT)
 
-    pausedTitleImage = pg.image.load('images/game-paused-title.png')
+    pausedTitleImage = pg.image.load('images/game-paused-title.png').convert_alpha()
     pausedTitleImage = pg.transform.scale(pausedTitleImage,
                                           (SCREEN_WIDTH, SCREEN_HEIGHT))
 
-    pauseImage = pg.image.load('images/pause-menu.png')
+    pauseImage = pg.image.load('images/pause-menu.png').convert_alpha()
     pauseImage = pg.transform.scale(pauseImage, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
-    optionSelectImage = pg.image.load('images/selected-options.png')
+    optionSelectImage = pg.image.load('images/selected-options.png').convert_alpha()
     optionSelectImage = pg.transform.scale(optionSelectImage, 
                                            (SCREEN_WIDTH, SCREEN_HEIGHT))
     
-    resumeSelectImage = pg.image.load('images/selected-resume.png')
+    resumeSelectImage = pg.image.load('images/selected-resume.png').convert_alpha()
     resumeSelectImage = pg.transform.scale(resumeSelectImage, 
                                            (SCREEN_WIDTH, SCREEN_HEIGHT))
 
-    sizeMenuImage = pg.image.load('images/size-menu.png')
+    sizeMenuImage = pg.image.load('images/size-menu.png').convert_alpha()
     sizeMenuImage = pg.transform.scale(sizeMenuImage, 
                                        (SCREEN_WIDTH, SCREEN_HEIGHT))
 
-    widthSelectArrows = pg.image.load('images/selected-width.png')
+    widthSelectArrows = pg.image.load('images/selected-width.png').convert_alpha()
     widthSelectArrows = pg.transform.scale(widthSelectArrows, 
                                            (SCREEN_WIDTH, SCREEN_HEIGHT))
     
-    heightSelectArrows = pg.image.load('images/selected-height.png')
+    heightSelectArrows = pg.image.load('images/selected-height.png').convert_alpha()
     heightSelectArrows = pg.transform.scale(heightSelectArrows, 
                                             (SCREEN_WIDTH, SCREEN_HEIGHT))
 
-    confirmSelectArrows = pg.image.load('images/selected-confirm.png')
+    confirmSelectArrows = pg.image.load('images/selected-confirm.png').convert_alpha()
     confirmSelectArrows = pg.transform.scale(confirmSelectArrows,
                                              (SCREEN_WIDTH, SCREEN_HEIGHT))
 
@@ -415,8 +435,9 @@ while True:
     yChange = ceil(SCREEN_HEIGHT * 0.0075)
 
     playerShip = Ship(shipImage, x, y)
+    playerScore = 0
 
     gameFont = pg.font.Font('PixelFont.ttf', int(SCREEN_HEIGHT * 0.053))
-
+    
     mainGameLoop(x,y)
     ## End of game sprites
